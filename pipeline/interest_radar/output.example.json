@@ -1,0 +1,42 @@
+{
+  "date_range": {
+    "from": "2026-05-01",
+    "to": "2026-05-20"
+  },
+  "radar": [
+    {
+      "topic": "Ableton Note",
+      "score": 0.86,
+      "signals": ["wants to try", "music sketching"],
+      "sources": ["notes/music-apps/ableton-note", "logs/daily/2026-05-19"],
+      "suggested_next_step": "Try a 10-minute sketch session using Ableton Note"
+    },
+    {
+      "topic": "Modular synthesizers",
+      "score": 0.62,
+      "signals": ["found interesting", "wants to learn more"],
+      "sources": ["logs/daily/2026-05-10", "logs/daily/2026-05-14"],
+      "suggested_next_step": "Watch an introductory video on Eurorack basics"
+    },
+    {
+      "topic": "Strength training",
+      "score": 0.54,
+      "signals": ["wants to start", "curious about"],
+      "sources": ["logs/daily/2026-05-12"],
+      "suggested_next_step": "Look up a beginner full-body program and schedule the first session"
+    }
+  ],
+  "clusters": [
+    {
+      "label": "Music & sound",
+      "topics": ["Ableton Note", "Modular synthesizers"],
+      "strength": "high"
+    },
+    {
+      "label": "Health & fitness",
+      "topics": ["Strength training"],
+      "strength": "medium"
+    }
+  ],
+  "summary": "Strong recurring interest in music tools, especially Ableton Note, with a secondary pull toward fitness routines."
+}

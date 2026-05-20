@@ -13,6 +13,7 @@ This repository is organized around two kinds of examples:
 | Example | What it shows | Entry point |
 | --- | --- | --- |
 | Daily Inbox Pipeline | Chaining agent calls with `NavdocClient.ask_server()` | `pipeline/daily_inbox/run.py` |
+| Interest Radar Pipeline | Multi-step extraction and ranking across a date range | `pipeline/interest_radar/run.py` |
 | Daily Context Extractor | Running a standalone agent config with `navdoc ask` | `config/ask/read/daily_context_extractor.yaml` |
 | Quick Capture | Creating documents with `NavdocClient.upload_document()` | `tool/quick_capture/capture.py` |
 

@@ -1,0 +1,72 @@
+name: Rank Interests
+description: Cluster and rank extracted interest signals into an Interest Radar.
+system_prompt: |
+  Cluster and rank the provided interest signals into an Interest Radar.
+
+  Respond in {{language}} for all human-readable text fields, but output ONLY a raw JSON object. No markdown, no code blocks, no explanation, no preamble. The entire response must be valid JSON that can be parsed directly.
+
+  Use only the provided interests JSON. Do not call tools. Do not invent topics, sources, or signals not present in the input.
+
+  Scoring (combine into a single score from 0.0 to 1.0, higher = stronger interest):
+  - frequency: how many distinct signals point to the same topic or closely related topic
+  - recency: more recent signals carry more weight than older ones
+  - intensity: explicit desire or commitment ("want to try", "definitely want to") > vague curiosity ("looks interesting")
+
+  Clustering:
+  - Group topically related entries into named clusters (e.g. "Music tools", "Health & fitness", "Productivity")
+  - Each topic belongs to exactly one cluster
+  - Omit the clusters array if all topics fall into a single cluster or if there are fewer than three topics total
+
+  For each radar entry:
+  - topic: canonical name for the interest (prefer the most specific and recognizable form)
+  - score: computed 0.0–1.0
+  - signals: deduplicated list of concise signal phrases drawn from the source data
+  - sources: all source URLs that contributed to this topic
+  - suggested_next_step: one concrete, low-friction action the user could take to explore this interest
+
+  Output schema:
+  {
+    "date_range": {
+      "from": "YYYY-MM-DD",
+      "to": "YYYY-MM-DD"
+    },
+    "radar": [
+      {
+        "topic": "string",
+        "score": 0.0,
+        "signals": ["concise signal phrase"],
+        "sources": ["document/url"],
+        "suggested_next_step": "one concrete actionable suggestion"
+      }
+    ],
+    "clusters": [
+      {
+        "label": "string",
+        "topics": ["string"],
+        "strength": "high | medium | low"
+      }
+    ],
+    "summary": "one concise sentence describing the overall interest profile"
+  }
+
+  Sort `radar` by score descending.
+  If the interests list is empty, output:
+  {
+    "date_range": { "from": "...", "to": "..." },
+    "radar": [],
+    "clusters": [],
+    "summary": "No interests found in the specified period."
+  }
+user_prompt: |
+  Cluster and rank these interest signals into an Interest Radar:
+
+  {{interests_json}}
+tools: []
+output_format: json
+temperature: 0.2
+placeholders:
+  - key: interests_json
+    label: Extracted interests JSON
+  - key: language
+    label: Response language
+    default: English

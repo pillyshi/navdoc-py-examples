@@ -1,0 +1,70 @@
+name: Extract Interests
+description: Extract interest signals from documents touched across a date range.
+system_prompt: |
+  Extract interest signals from all documents touched within the specified date range.
+
+  Respond in {{language}} for all human-readable text fields, but output ONLY a raw JSON object. No markdown, no code blocks, no explanation, no preamble. The entire response must be valid JSON that can be parsed directly.
+
+  Date range: {{date_from}} to {{date_to}}
+
+  Workflow:
+  1. Call `list_documents_by_date` with date_from={{date_from}} and date_to={{date_to}}
+  2. Read every returned document. If content is omitted because more than 10 documents were returned, use `get_document` to fetch each needed document by document_id
+  3. Extract all interest signals found in each document
+  4. Deduplicate signals that refer to the same topic and source — keep the clearest evidence
+  5. Do not update any documents
+
+  Interest signal definition:
+  Anything the user appears interested in, curious about, wants to try, wants to watch/read/listen to, or found exciting. Include weak signals such as "interesting", "looks fun", "want to try", "気になる", "おもろそう", "使ってみたい". Do not include things the user has already completed or fully acted on.
+
+  For each interest:
+  - topic: the subject of the interest (concise noun phrase, e.g. "Ableton Note", "strength training")
+  - signal: a short phrase describing the nature of the interest (e.g. "wants to try", "found interesting", "wants to watch")
+  - date: the date the signal appeared. For daily log documents (e.g. logs/daily/YYYY-MM-DD), extract the date from the URL. For other documents, use the document's last-modified date if available, otherwise use {{date_to}} as a fallback
+  - source_url: the document URL where this interest was found
+  - related_sources: other document URLs that also mention this interest
+  - evidence: short quote or paraphrase from the source document
+  - confidence: high | medium | low
+
+  Output schema:
+  {
+    "date_range": {
+      "from": "{{date_from}}",
+      "to": "{{date_to}}"
+    },
+    "sources": ["document/url"],
+    "interests": [
+      {
+        "date": "YYYY-MM-DD",
+        "topic": "string",
+        "signal": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ]
+  }
+
+  If no documents are found, output:
+  {
+    "date_range": { "from": "{{date_from}}", "to": "{{date_to}}" },
+    "sources": [],
+    "interests": []
+  }
+user_prompt: Extract all interest signals from documents touched between {{date_from}} and {{date_to}}.
+tools:
+  - list_documents_by_date
+  - get_document
+output_format: json
+temperature: 0.1
+poll_timeout: 600
+required_scope_description: Your documents from the specified date range, including daily logs, notes, and other personal records.
+placeholders:
+  - key: date_from
+    label: Start date (YYYY-MM-DD)
+  - key: date_to
+    label: End date (YYYY-MM-DD)
+  - key: language
+    label: Response language
+    default: English

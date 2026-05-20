@@ -861,7 +861,7 @@ wheels = [
 
 [[package]]
 name = "navdoc"
-version = "0.2.21"
+version = "0.2.23"
 source = { editable = "../navdoc-py" }
 dependencies = [
     { name = "httpx" },
