@@ -8,6 +8,14 @@ This repository is organized around two kinds of examples:
 - `pipeline/`: Python SDK examples that compose multiple agents into a workflow
 - `tool/`: small utilities built with the Python SDK
 
+## Examples
+
+| Example | What it shows | Entry point |
+| --- | --- | --- |
+| Daily Inbox Pipeline | Chaining agent calls with `NavdocClient.ask_server()` | `pipeline/daily_inbox/run.py` |
+| Daily Context Extractor | Running a standalone agent config with `navdoc ask` | `config/ask/read/daily_context_extractor.yaml` |
+| Quick Capture | Creating documents with `NavdocClient.upload_document()` | `tool/quick_capture/capture.py` |
+
 ## Setup
 
 Install dependencies with `uv`:
