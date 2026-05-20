@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -16,11 +17,20 @@ CONTEXT_CONFIG = ROOT / "config" / "ask" / "read" / "daily_context_extractor.yam
 TRIAGE_CONFIG = Path(__file__).resolve().parent / "config" / "triage_from_context.yaml"
 
 
+class PipelineError(Exception):
+    pass
+
+
 def load_config(path: Path) -> dict[str, Any]:
-    with path.open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except OSError as e:
+        raise PipelineError(f"could not read config {path}: {e}") from e
+    except yaml.YAMLError as e:
+        raise PipelineError(f"invalid YAML in config {path}: {e}") from e
     if not isinstance(data, dict):
-        raise ValueError(f"config must be an object: {path}")
+        raise PipelineError(f"config must be an object: {path}")
     return data
 
 
@@ -31,12 +41,19 @@ def render_template(template: str, values: dict[str, str]) -> str:
     return re.sub(r"\{\{(\w+)\}\}", replace, template)
 
 
-def parse_json_answer(answer: str) -> Any:
+def parse_json_answer(answer: str, *, step: str) -> Any:
     text = answer.strip()
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text)
         text = re.sub(r"\s*```$", "", text)
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        preview = text[:500]
+        raise PipelineError(
+            f"{step} returned invalid JSON at line {e.lineno}, column {e.colno}: {e.msg}\n"
+            f"Response preview:\n{preview}"
+        ) from e
 
 
 async def ask_with_config(
@@ -44,19 +61,23 @@ async def ask_with_config(
     config: dict[str, Any],
     values: dict[str, str],
     *,
+    step: str,
     timezone: str,
 ) -> Any:
     system_prompt = render_template(config.get("system_prompt", ""), values)
     user_prompt = render_template(config.get("user_prompt", ""), values)
-    response = await client.ask_server(
-        user_prompt,
-        timezone=timezone,
-        system_prompt=system_prompt,
-        tools=config.get("tools"),
-        output_format=config.get("output_format", "text"),
-        temperature=config.get("temperature"),
-    )
-    return parse_json_answer(response.answer)
+    try:
+        response = await client.ask_server(
+            user_prompt,
+            timezone=timezone,
+            system_prompt=system_prompt,
+            tools=config.get("tools"),
+            output_format=config.get("output_format", "text"),
+            temperature=config.get("temperature"),
+        )
+    except Exception as e:
+        raise PipelineError(f"{step} failed: {e}") from e
+    return parse_json_answer(response.answer, step=step)
 
 
 async def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
@@ -69,6 +90,7 @@ async def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
         client,
         context_config,
         {"date": args.date, "language": args.language},
+        step="daily context extractor",
         timezone=args.timezone,
     )
     triage = await ask_with_config(
@@ -78,6 +100,7 @@ async def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
             "language": args.language,
             "context_json": json.dumps(context, ensure_ascii=False, indent=2),
         },
+        step="triage from context",
         timezone=args.timezone,
     )
 
@@ -98,7 +121,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    result = asyncio.run(run_pipeline(args))
+    try:
+        result = asyncio.run(run_pipeline(args))
+    except PipelineError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        raise SystemExit(1) from e
+    except KeyboardInterrupt:
+        print("Interrupted.", file=sys.stderr)
+        raise SystemExit(130)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
