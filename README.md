@@ -6,6 +6,7 @@ This repository is organized around two kinds of examples:
 
 - `config/`: standalone agent configs that can be run with `navdoc ask` or `navdoc chat`
 - `pipeline/`: Python SDK examples that compose multiple agents into a workflow
+- `tool/`: small utilities built with the Python SDK
 
 ## Setup
 
@@ -48,4 +49,18 @@ You can also run standalone configs directly:
 
 ```bash
 uv run navdoc ask --config config/ask/read/daily_context_extractor.yaml --var date=2026-05-19 --var language=English
+```
+
+## Quick Capture
+
+`tool/quick_capture` is a minimal write-side example. It creates one navdoc document per capture using `NavdocClient.upload_document()`.
+
+```bash
+uv run python tool/quick_capture/capture.py "Tried Ableton Note. Seems useful for sketching ideas."
+```
+
+Preview the generated payload without writing:
+
+```bash
+uv run python tool/quick_capture/capture.py --dry-run "Draft capture"
 ```
