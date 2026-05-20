@@ -16,3 +16,5 @@ To inspect the intermediate context:
 ```bash
 uv run python pipeline/daily_inbox/run.py --date 2026-05-19 --language English --include-context
 ```
+
+See `output.example.json` for a public, fictional example of the final triage output.

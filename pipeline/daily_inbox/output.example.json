@@ -1,0 +1,69 @@
+{
+  "date": "2026-05-19",
+  "sources": [
+    "logs/daily/2026-05-19",
+    "notes/music-apps/ableton-note",
+    "https://example.com/local-recycling-guide.pdf"
+  ],
+  "do_now": [],
+  "do_later": [
+    {
+      "title": "Check whether books can be donated to the local library",
+      "reason": "The source mentions uncertainty about whether books should be recycled or donated.",
+      "date_hint": "someday",
+      "source_url": "https://example.com/local-recycling-guide.pdf",
+      "related_sources": [],
+      "evidence": "Books may count as paper recycling, but library donation might be better.",
+      "confidence": "medium"
+    }
+  ],
+  "save_to_memory": [
+    {
+      "target": "things",
+      "title": "Cable tray",
+      "candidate_update": "Installed under the desk and improved cable organization.",
+      "source_url": "logs/daily/2026-05-19",
+      "related_sources": [],
+      "evidence": "Installed the cable tray. The wiring looks much cleaner now.",
+      "confidence": "high"
+    },
+    {
+      "target": "knowledge",
+      "title": "Clothing disposal",
+      "candidate_update": "Clothing should be treated as recyclable resources rather than burnable trash.",
+      "source_url": "https://example.com/local-recycling-guide.pdf",
+      "related_sources": [],
+      "evidence": "Clothing is listed under recyclable resources.",
+      "confidence": "high"
+    }
+  ],
+  "interests": [
+    {
+      "title": "Ableton Note",
+      "signal": "The user expressed interest in trying the music sketching app.",
+      "source_url": "notes/music-apps/ableton-note",
+      "related_sources": [],
+      "evidence": "This app looks fun. I want to try it.",
+      "confidence": "high"
+    }
+  ],
+  "review": [
+    {
+      "title": "Desk setup notes",
+      "question": "Should the setup change be saved to a long-term workspace or gear document?",
+      "source_url": "logs/daily/2026-05-19",
+      "related_sources": [],
+      "evidence": "The desk feels easier to use after reorganizing it.",
+      "confidence": "medium"
+    }
+  ],
+  "ignore": [
+    {
+      "title": "Short entertainment videos",
+      "reason": "Transient entertainment content with no follow-up or long-term memory value.",
+      "source_url": "https://example.com/video/funny-short",
+      "related_sources": []
+    }
+  ],
+  "summary": "The day included desk setup improvements, a useful recycling note, one later follow-up, and a new music app interest."
+}
