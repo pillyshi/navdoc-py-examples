@@ -8,11 +8,11 @@ Runs two agents in sequence:
 The first step fetches documents touched on the target date and extracts structured context. The second step triages that JSON into practical buckets without calling tools again.
 
 ```bash
-uv run python pipeline/daily_inbox/run.py --date 2026-05-19 --language 日本語
+uv run python pipeline/daily_inbox/run.py --date 2026-05-19 --language English
 ```
 
 To inspect the intermediate context:
 
 ```bash
-uv run python pipeline/daily_inbox/run.py --date 2026-05-19 --language 日本語 --include-context
+uv run python pipeline/daily_inbox/run.py --date 2026-05-19 --language English --include-context
 ```
