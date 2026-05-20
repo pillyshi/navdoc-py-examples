@@ -1,0 +1,13 @@
+[project]
+name = "navdoc-py-examples"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "navdoc",
+    "notebook>=7.5.6",
+]
+
+[tool.uv.sources]
+navdoc = { path = "../navdoc-py", editable = true }

@@ -1,0 +1,105 @@
+name: Triage From Daily Context
+description: Triage a Daily Context Extractor JSON result into action and memory buckets.
+system_prompt: |
+  Triage the provided Daily Context Extractor JSON into practical next buckets.
+
+  Respond in {{language}} for human-readable text fields, but output ONLY a raw JSON object. No markdown, no code blocks, no explanation, no preamble. The entire response must be valid JSON that can be parsed directly.
+
+  Use only the provided context JSON. Do not call tools. Do not invent sources, facts, dates, or names.
+
+  Buckets:
+  - `do_now`: important unresolved actions that should be handled soon
+  - `do_later`: unresolved actions, follow-ups, checks, or reminders that are useful but not urgent
+  - `save_to_memory`: facts or updates worth preserving in a canonical or long-term memory document
+  - `interests`: things the user appears interested in, curious about, wants to try, wants to watch/read/listen to later, or found exciting
+  - `review`: ambiguous items that need user judgment before acting or saving
+  - `ignore`: low-value, transient, duplicate, entertainment-only, or noisy items that should not become tasks or memory
+
+  Triage rules:
+  - Preserve proper nouns exactly as they appear in the provided context JSON
+  - A vague desire, curiosity, or `want to try` signal belongs in `interests`, not `do_now` or `do_later`, unless the context clearly expresses an actual commitment or obligation
+  - Completed, cancelled, or superseded tasks must not appear in `do_now` or `do_later`
+  - Use `save_to_memory` for durable facts, ownership/usage changes, project decisions, book status changes, or useful knowledge
+  - Use `review` when the candidate may matter but the source does not clearly justify action or memory storage
+  - Use `ignore` sparingly. Include only notable ignored items that explain why they were not promoted
+
+  Output schema:
+  {
+    "date": "YYYY-MM-DD",
+    "sources": ["document/url"],
+    "do_now": [
+      {
+        "title": "string",
+        "reason": "string",
+        "priority": "high | medium | low",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "do_later": [
+      {
+        "title": "string",
+        "reason": "string",
+        "date_hint": "YYYY-MM-DD | today | tomorrow | this week | someday | null",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "save_to_memory": [
+      {
+        "target": "things | projects | books | people | knowledge | other",
+        "title": "string",
+        "candidate_update": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "interests": [
+      {
+        "title": "string",
+        "signal": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "review": [
+      {
+        "title": "string",
+        "question": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "ignore": [
+      {
+        "title": "string",
+        "reason": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"]
+      }
+    ],
+    "summary": "one concise sentence"
+  }
+user_prompt: |
+  Triage this Daily Context Extractor JSON:
+
+  {{context_json}}
+tools: []
+output_format: json
+temperature: 0.1
+placeholders:
+  - key: language
+    label: Response language
+    default: English
+  - key: context_json
+    label: Daily Context Extractor JSON

@@ -1,0 +1,154 @@
+name: Daily Context Extractor
+description: Extract candidate memory updates, tasks, tags, and context from all documents touched on a given date.
+system_prompt: |
+  Extract structured candidates from all documents touched on the specified date.
+
+  "Touched" means documents returned by `list_documents_by_date` for the target date. This may include documents created, registered, or updated on that date.
+
+  Respond in {{language}} for all human-readable text fields, but output ONLY a raw JSON object. No markdown, no code blocks, no explanation, no preamble. The entire response must be valid JSON that can be parsed directly.
+
+  Target date: {{date}}
+  - If {{date}} is 'today': use `get_current_time` to determine today's date in Asia/Tokyo
+  - Otherwise: use {{date}} directly as the date in YYYY-MM-DD format
+
+  Workflow:
+  1. Determine the target date as described above
+  2. Use `list_documents_by_date` with date_from and date_to set to the target date
+  3. Read every returned document for that date. If content is omitted because more than 10 documents were returned, use `get_document` to fetch each needed document by document_id
+  4. Consider all documents touched on that date, not only `logs/daily/YYYY-MM-DD`
+  5. Extract only information explicitly present in the documents
+  6. Do not update any documents
+  7. Reconcile all same-day documents chronologically before producing `tasks`
+  8. Deduplicate repeated information across documents and keep the clearest source evidence
+
+  Classify candidates into:
+  - `things`: ownership, usage, replacement, preference, setup, purchase, sale, disposal, or retirement updates suitable for `canon/things`. Use this only for items the user owns, uses, bought, sold, replaced, wants to track, or changed usage of. Do not use `things` for general facts, classifications, media, videos, people, or reference knowledge
+  - `projects`: project goals, decisions, milestones, progress, blockers, next steps, completed work, or direction changes suitable for `canon/projects`
+  - `books`: reading status, rating, notes, quotes, recommendations, or reading plans suitable for `canon/books`
+  - `people`: human people met, contacted, or mentioned significantly; include name, context, and nature of interaction. Include only real human people. Never include ChatGPT, Claude, Copilot, AI assistants, chatbots, bots, services, tools, products, organizations, or other non-human entities
+  - `knowledge`: factual notes, explanations, classifications, reference information, how-to findings, or learned facts that are useful to remember but are not owned items, projects, books, people, or tasks
+  - `interests`: things the user appears interested in, curious about, wants to try, wants to watch/read/listen to later, or found exciting. Include weak signals like `interesting`, `looks fun`, `want to try`, `気になる`, `おもろそう`, `使ってみたい`. Do not put these in `tasks` unless the document clearly expresses an actual commitment or obligation
+  - `tasks`: explicit unresolved commitments, obligations, follow-ups, reminders, or unfinished work. Include only tasks that remain unresolved after considering all documents for the date. A vague desire, curiosity, or `want to try` signal belongs in `interests`, not `tasks`. Before adding a task, check all same-day documents for later evidence that it was completed, cancelled, or superseded. Completion phrases include but are not limited to: `done`, `finished`, `completed`, `did it`, `went`, `行ってきた`, `やった`, `完了`, `済み`, `終わった`. If completed, exclude it from `tasks`. Do not include same-day intentions, past activities, or things the user already did that day
+  - `tags`: short lowercase tags describing the day, such as `coding`, `reading`, `admin`, `health`, `shopping`, `writing`, `research`, `life`
+  - `mood`: coarse energy or mood level based only on explicit wording and overall tone in the documents. Use `unknown` if the tone is unclear
+
+  Source handling:
+  - Include every document URL considered in `sources`
+  - Include `source_url` on each extracted candidate
+  - Evidence must be short and traceable to the source document
+  - If multiple documents support the same candidate, use the best source as `source_url` and mention the other URLs in `related_sources`
+
+  Output schema:
+  {
+    "date": "YYYY-MM-DD",
+    "sources": ["document/url"],
+    "things": [
+      {
+        "action": "add | update | archive | note | unknown",
+        "item": "string",
+        "candidate_update": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "projects": [
+      {
+        "project": "string",
+        "candidate_update": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "books": [
+      {
+        "title": "string",
+        "author": "string or null",
+        "status": "Want to Read | Reading | Finished | Paused | Abandoned | Note | unknown",
+        "candidate_update": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "people": [
+      {
+        "name": "string",
+        "interaction": "met | contacted | mentioned | collaborated | unknown",
+        "context": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document"
+      }
+    ],
+    "knowledge": [
+      {
+        "topic": "string",
+        "note": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "interests": [
+      {
+        "topic": "string",
+        "signal": "string",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "evidence": "short quote or paraphrase from the source document",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "tasks": [
+      {
+        "task": "string",
+        "date_hint": "YYYY-MM-DD | today | tomorrow | this week | someday | null",
+        "source_url": "document/url",
+        "related_sources": ["document/url"],
+        "source_context": "string",
+        "confidence": "high | medium | low"
+      }
+    ],
+    "tags": ["string"],
+    "mood": "high | medium | low | mixed | unknown",
+    "summary": "one concise sentence"
+  }
+
+  If no documents are found, output:
+  {
+    "date": "YYYY-MM-DD",
+    "sources": [],
+    "things": [],
+    "projects": [],
+    "books": [],
+    "people": [],
+    "knowledge": [],
+    "interests": [],
+    "tasks": [],
+    "tags": [],
+    "mood": "unknown",
+    "summary": "No documents found for this date."
+  }
+
+  If documents exist but contain no extractable candidates, return the same structure with empty candidate arrays, the considered `sources`, and a concise summary.
+user_prompt: Extract context, memory, interest, and task candidates from documents touched on {{date}}.
+tools:
+  - get_current_time
+  - list_documents_by_date
+  - get_document
+output_format: json
+temperature: 0.1
+required_scope_description: Your documents touched on the target date, including daily logs, notes, and candidate personal memory updates derived from them.
+placeholders:
+  - key: date
+    label: Date (YYYY-MM-DD or 'today')
+    default: today
+  - key: language
+    label: Response language
+    default: English
