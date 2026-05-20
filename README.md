@@ -64,9 +64,3 @@ Preview the generated payload without writing:
 ```bash
 uv run python tool/quick_capture/capture.py --dry-run "Draft capture"
 ```
-
-## iOS Shortcut Quick Capture
-
-`tool/ios_shortcut_quick_capture` documents a simple iOS Shortcut that captures text into Navdoc with `POST /documents`.
-
-The Shortcut itself should be distributed as an iCloud Shortcut link, while this repository keeps the behavior and request shape in a reviewable format.
